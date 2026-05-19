@@ -1,31 +1,77 @@
-public class TicketController
+using Microsoft.AspNetCore.Mvc;
+
+namespace EventTicket.Controllers
 {
-    private readonly BookingService _bookingService;
-    private readonly RefundService _refundService;
-
-    public TicketController(BookingService bookingService, RefundService refundService)
+    [ApiController]
+    [Route("api/tickets")]
+    public class TicketController : ControllerBase
     {
-        _bookingService = bookingService;
-        _refundService = refundService;
+        private readonly EventTicketModule _module;
+
+        public TicketController(EventTicketModule module)
+        {
+            _module = module;
+        }
+
+        [HttpPost("purchase")]
+        public IActionResult PurchaseTicket([FromBody] PurchaseTicketRequest request)
+        {
+            try
+            {
+                var ticket = _module.BookingService.PurchaseTicket(request.UserId, request.EventId, request.SeatId);
+                return Ok(ticket);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        [HttpPost("{ticketId}/refund")]
+        public IActionResult RefundTicket(int ticketId)
+        {
+            try
+            {
+                var result = _module.RefundService.RefundTicket(ticketId);
+                return Ok(result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        [HttpGet("{ticketId}/refund-commission")]
+        public IActionResult GetRefundCommission(int ticketId)
+        {
+            var ticket = _module.TicketRepository.GetById(ticketId);
+            if (ticket == null)
+                return NotFound(new { error = "Билет не найден" });
+
+            var evt = _module.EventRepository.GetById(ticket.EventId);
+            if (evt == null)
+                return NotFound(new { error = "Событие не найдено" });
+
+            var commission = _module.PricingService.CalculateRefundCommission(ticketId, ticket.Price, evt.Date);
+            return Ok(new
+            {
+                commission = commission,
+                refundAmount = ticket.Price - commission
+            });
+        }
+
+        [HttpGet]
+        public IActionResult GetUserTickets([FromQuery] int userId = 1)
+        {
+            var tickets = _module.TicketRepository.GetByUserId(userId);
+            return Ok(tickets);
+        }
     }
 
-    public Ticket PurchaseTicket(int userId, int seatId)
+    public class PurchaseTicketRequest
     {
-        return _bookingService.PurchaseTicket(userId, seatId);
-    }
-
-    public decimal RefundTicket(int ticketId)
-    {
-        return _refundService.RefundTicket(ticketId);
-    }
-
-    public IEnumerable<Ticket> GetUserTickets(int userId)
-    {
-        return _refundService.GetUserTickets(userId);
-    }
-
-    public bool CheckSeatAvailability(int seatId)
-    {
-        return _bookingService.IsSeatAvailable(seatId);
+        public int UserId { get; set; }
+        public int EventId { get; set; }
+        public int SeatId { get; set; }
     }
 }

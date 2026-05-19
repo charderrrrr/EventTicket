@@ -35,13 +35,18 @@ namespace EventTicket.Data.Repositories
         public Seat? GetById(int id)
         {
             return _connection.QuerySingleOrDefault<Seat>(
-                "SELECT * FROM seats WHERE id = @Id", new { Id = id });
+                @"SELECT id, event_id AS EventId, row AS Row, number AS Number, 
+                         category_id AS CategoryId, status AS Status 
+                  FROM seats WHERE id = @Id", 
+                new { Id = id });
         }
 
         public IEnumerable<Seat> GetByEventId(int eventId)
         {
             return _connection.Query<Seat>(
-                "SELECT * FROM seats WHERE event_id = @EventId ORDER BY row, number", 
+                @"SELECT id, event_id AS EventId, row AS Row, number AS Number, 
+                         category_id AS CategoryId, status AS Status 
+                  FROM seats WHERE event_id = @EventId ORDER BY row, number", 
                 new { EventId = eventId });
         }
 

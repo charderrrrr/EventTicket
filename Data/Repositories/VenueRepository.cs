@@ -24,12 +24,16 @@ namespace EventTicket.Data.Repositories
         public Venue? GetById(int id)
         {
             return _connection.QuerySingleOrDefault<Venue>(
-                "SELECT * FROM venues WHERE id = @Id", new { Id = id });
+                @"SELECT id, name AS Name, rows AS Rows, seats_per_row AS SeatsPerRow, blocked_seats AS BlockedSeats 
+                  FROM venues WHERE id = @Id", 
+                new { Id = id });
         }
 
         public IEnumerable<Venue> GetAll()
         {
-            return _connection.Query<Venue>("SELECT * FROM venues ORDER BY name");
+            return _connection.Query<Venue>(
+                @"SELECT id, name AS Name, rows AS Rows, seats_per_row AS SeatsPerRow, blocked_seats AS BlockedSeats 
+                  FROM venues ORDER BY name");
         }
 
         public void Update(Venue venue)

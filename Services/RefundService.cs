@@ -1,34 +1,61 @@
-public class RefundService
+using System;
+using System.Data;
+using EventTicket.Data.Repositories;
+using EventTicket.Models.Enums;
+
+namespace EventTicket.Services
 {
-    private readonly TicketRepository _ticketRepo;
-    private readonly SeatRepository _seatRepo;
-    private readonly PricingService _pricingService;
-
-    public RefundService(TicketRepository ticketRepo, SeatRepository seatRepo, PricingService pricingService)
+    public class RefundService
     {
-        _ticketRepo = ticketRepo;
-        _seatRepo = seatRepo;
-        _pricingService = pricingService;
+        private readonly IDbConnection _connection;
+        private readonly TicketRepository _ticketRepository;
+        private readonly SeatRepository _seatRepository;
+        private readonly EventRepository _eventRepository;
+        private readonly PricingService _pricingService;
+
+        public RefundService(IDbConnection connection)
+        {
+            _connection = connection;
+            _ticketRepository = new TicketRepository(connection);
+            _seatRepository = new SeatRepository(connection);
+            _eventRepository = new EventRepository(connection);
+            _pricingService = new PricingService(connection);
+        }
+
+        public RefundResult RefundTicket(int ticketId)
+        {
+            var ticket = _ticketRepository.GetById(ticketId);
+            if (ticket == null)
+                throw new InvalidOperationException("Билет не найден");
+
+            if (ticket.Status != TicketStatus.Active)
+                throw new InvalidOperationException("Билет уже возвращен или отменен");
+
+            var evt = _eventRepository.GetById(ticket.EventId);
+            if (evt == null)
+                throw new InvalidOperationException("Событие не найдено");
+
+            var commission = _pricingService.CalculateRefundCommission(ticketId, ticket.Price, evt.Date);
+            var refundAmount = ticket.Price - commission;
+
+            _ticketRepository.UpdateStatus(ticketId, TicketStatus.Refunded);
+            _seatRepository.UpdateStatus(ticket.SeatId, SeatStatus.Available);
+
+            return new RefundResult
+            {
+                TicketId = ticketId,
+                OriginalPrice = ticket.Price,
+                Commission = commission,
+                RefundAmount = refundAmount
+            };
+        }
     }
 
-    public decimal RefundTicket(int ticketId)
+    public class RefundResult
     {
-        var ticket = _ticketRepo.GetById(ticketId);
-        
-        if (ticket.Status != "active")
-            throw new InvalidOperationException("Ticket is not active");
-        
-        var commission = _pricingService.CalculateRefundCommission(ticketId);
-        var refundAmount = ticket.Price - commission;
-        
-        _ticketRepo.UpdateStatus(ticketId, "refunded");
-        _seatRepo.UpdateStatus(ticket.SeatId, "available");
-        
-        return refundAmount;
-    }
-
-    public IEnumerable<Ticket> GetUserTickets(int userId)
-    {
-        return _ticketRepo.GetByUserId(userId);
+        public int TicketId { get; set; }
+        public decimal OriginalPrice { get; set; }
+        public decimal Commission { get; set; }
+        public decimal RefundAmount { get; set; }
     }
 }

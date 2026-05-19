@@ -1,37 +1,32 @@
-public class EventController
+using Microsoft.AspNetCore.Mvc;
+
+namespace EventTicket.Controllers
 {
-    private readonly EventRepository _eventRepo;
-    private readonly VenueLayoutService _venueLayoutService;
-
-    public EventController(EventRepository eventRepo, VenueLayoutService venueLayoutService)
+    [ApiController]
+    [Route("api/venues")]
+    public class VenueController : ControllerBase
     {
-        _eventRepo = eventRepo;
-        _venueLayoutService = venueLayoutService;
-    }
+        private readonly EventTicketModule _module;
 
-    public Event CreateEvent(string name, DateTime date, int venueId)
-    {
-        var evt = new Event
+        public VenueController(EventTicketModule module)
         {
-            Name = name,
-            Date = date,
-            VenueId = venueId,
-            Status = "active"
-        };
-        
-        var created = _eventRepo.Create(evt);
-        _venueLayoutService.GenerateSeatsForEvent(created.Id);
-        
-        return created;
-    }
+            _module = module;
+        }
 
-    public IEnumerable<Event> GetActiveEvents()
-    {
-        return _eventRepo.GetAll();
-    }
+        [HttpGet]
+        public IActionResult GetVenues()
+        {
+            var venues = _module.VenueRepository.GetAll();
+            return Ok(venues);
+        }
 
-    public Event GetEvent(int id)
-    {
-        return _eventRepo.GetById(id);
+        [HttpGet("{id}")]
+        public IActionResult GetVenue(int id)
+        {
+            var venue = _module.VenueRepository.GetById(id);
+            if (venue == null)
+                return NotFound(new { error = "Зал не найден" });
+            return Ok(venue);
+        }
     }
 }

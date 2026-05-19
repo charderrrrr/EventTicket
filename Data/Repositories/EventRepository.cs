@@ -24,13 +24,16 @@ namespace EventTicket.Data.Repositories
         public Event? GetById(int id)
         {
             return _connection.QuerySingleOrDefault<Event>(
-                "SELECT * FROM events WHERE id = @Id", new { Id = id });
+                @"SELECT id, name AS Name, date AS Date, venue_id AS VenueId, status AS Status 
+                  FROM events WHERE id = @Id", 
+                new { Id = id });
         }
 
         public IEnumerable<Event> GetAll()
         {
             return _connection.Query<Event>(
-                "SELECT * FROM events WHERE status = 'active' ORDER BY date");
+                @"SELECT id, name AS Name, date AS Date, venue_id AS VenueId, status AS Status 
+                  FROM events WHERE status = 'active' ORDER BY date");
         }
 
         public void Update(Event evt)

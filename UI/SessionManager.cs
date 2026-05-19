@@ -1,19 +1,22 @@
-public class SessionManager
+namespace EventTicket.UI
 {
-    private static SessionManager _instance;
-    public int CurrentUserId { get; private set; }
-
-    private SessionManager() { }
-
-    public static SessionManager Instance => _instance ??= new SessionManager();
-
-    public void SetUser(int userId)
+    public class SessionManager
     {
-        CurrentUserId = userId;
-    }
+        private static SessionManager? _instance;
+        public int CurrentUserId { get; private set; }
 
-    public int GetCurrentUserId()
-    {
-        return CurrentUserId;
+        private SessionManager() { }
+
+        public static SessionManager Instance => _instance ??= new SessionManager();
+
+        public void SetUser(int userId)
+        {
+            CurrentUserId = userId;
+        }
+
+        public int GetCurrentUserId()
+        {
+            return CurrentUserId;
+        }
     }
 }

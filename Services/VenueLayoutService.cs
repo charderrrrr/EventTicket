@@ -1,75 +1,84 @@
-using System.Text.Json;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using EventTicket.Data.Repositories;
+using EventTicket.Models;
+using EventTicket.Models.Enums;
 
-public class VenueLayoutService
+namespace EventTicket.Services
 {
-    private readonly VenueRepository _venueRepo;
-    private readonly SeatRepository _seatRepo;
-    private readonly EventRepository _eventRepo;
-
-    public VenueLayoutService(VenueRepository venueRepo, SeatRepository seatRepo, EventRepository eventRepo)
+    public class VenueLayoutService
     {
-        _venueRepo = venueRepo;
-        _seatRepo = seatRepo;
-        _eventRepo = eventRepo;
-    }
+        private readonly IDbConnection _connection;
+        private readonly VenueRepository _venueRepository;
+        private readonly SeatRepository _seatRepository;
+        private readonly EventRepository _eventRepository;
+        private readonly CategoryRepository _categoryRepository;
 
-    public void GenerateSeatsForEvent(int eventId)
-    {
-        var evt = _eventRepo.GetById(eventId);
-        var venue = _venueRepo.GetById(evt.VenueId);
-        var blockedSeats = JsonSerializer.Deserialize<List<BlockedSeat>>(venue.BlockedSeats);
-        var categories = new CategoryRepository(_venueRepo as dynamic).GetAll();
-        
-        var seats = new List<Seat>();
-        
-        for (int row = 1; row <= venue.Rows; row++)
+        public VenueLayoutService(IDbConnection connection)
         {
-            for (int num = 1; num <= venue.SeatsPerRow; num++)
+            _connection = connection;
+            _venueRepository = new VenueRepository(connection);
+            _seatRepository = new SeatRepository(connection);
+            _eventRepository = new EventRepository(connection);
+            _categoryRepository = new CategoryRepository(connection);
+        }
+
+        public void GenerateSeatsForEvent(int eventId)
+        {
+            var evt = _eventRepository.GetById(eventId);
+            if (evt == null)
+                throw new InvalidOperationException("Событие не найдено");
+
+            var venue = _venueRepository.GetById(evt.VenueId);
+            if (venue == null)
+                throw new InvalidOperationException("Зал не найден");
+
+            var categories = _categoryRepository.GetAll().ToList();
+            var seats = new List<Seat>();
+
+            for (int row = 1; row <= venue.Rows; row++)
             {
-                bool isBlocked = blockedSeats.Any(b => b.Row == row && b.Number == num);
-                
-                var seat = new Seat
+                for (int number = 1; number <= venue.SeatsPerRow; number++)
                 {
-                    EventId = eventId,
-                    Row = row,
-                    Number = num,
-                    CategoryId = DetermineCategory(row, venue.Rows),
-                    Status = isBlocked ? "blocked" : "available"
-                };
-                
-                seats.Add(seat);
+                    var isBlocked = venue.IsSeatBlocked(row, number);
+                    
+                    int categoryId;
+                    if (row <= 3)
+                        categoryId = categories.First(c => c.Name == "VIP").Id;
+                    else if (row <= 7)
+                        categoryId = categories.First(c => c.Name == "Parter").Id;
+                    else
+                        categoryId = categories.First(c => c.Name == "Balcony").Id;
+
+                    var seat = Seat.Create(
+                        eventId,
+                        row,
+                        number,
+                        categoryId,
+                        isBlocked ? SeatStatus.Blocked : SeatStatus.Available
+                    );
+
+                    seats.Add(seat);
+                }
             }
+
+            _seatRepository.CreateBatch(seats);
         }
-        
-        _seatRepo.CreateBatch(seats);
-    }
 
-    private int DetermineCategory(int row, int totalRows)
-    {
-        if (row <= 3) return 3;
-        if (row <= 7) return 1;
-        return 2;
-    }
-
-    public string[,] GetVenueLayout(int eventId)
-    {
-        var evt = _eventRepo.GetById(eventId);
-        var venue = _venueRepo.GetById(evt.VenueId);
-        var seats = _seatRepo.GetByEventId(eventId).ToList();
-        
-        var layout = new string[venue.Rows, venue.SeatsPerRow];
-        
-        foreach (var seat in seats)
+        public Seat GetSeatInfo(int seatId)
         {
-            layout[seat.Row - 1, seat.Number - 1] = seat.Status;
-        }
-        
-        return layout;
-    }
+            var seat = _seatRepository.GetById(seatId);
+            if (seat == null)
+                throw new InvalidOperationException("Место не найдено");
 
-    private class BlockedSeat
-    {
-        public int Row { get; set; }
-        public int Number { get; set; }
+            return seat;
+        }
+
+        public IEnumerable<Seat> GetEventSeats(int eventId)
+        {
+            return _seatRepository.GetByEventId(eventId);
+        }
     }
 }

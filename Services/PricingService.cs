@@ -1,51 +1,62 @@
-public class PricingService
+using System;
+using System.Data;
+using System.Linq;
+using EventTicket.Data.Repositories;
+using EventTicket.Models.Enums;
+
+namespace EventTicket.Services
 {
-    private readonly SeatRepository _seatRepo;
-    private readonly CategoryRepository _categoryRepo;
-
-    public PricingService(SeatRepository seatRepo, CategoryRepository categoryRepo)
+    public class PricingService
     {
-        _seatRepo = seatRepo;
-        _categoryRepo = categoryRepo;
-    }
+        private readonly IDbConnection _connection;
+        private readonly SeatRepository _seatRepository;
+        private readonly CategoryRepository _categoryRepository;
 
-    public decimal CalculatePrice(int seatId)
-    {
-        var seat = _seatRepo.GetById(seatId);
-        var category = _categoryRepo.GetById(seat.CategoryId);
-        var demandCoefficient = CalculateDemandCoefficient(seat.EventId);
-        
-        return category.BasePrice * category.Multiplier * demandCoefficient;
-    }
+        public PricingService(IDbConnection connection)
+        {
+            _connection = connection;
+            _seatRepository = new SeatRepository(connection);
+            _categoryRepository = new CategoryRepository(connection);
+        }
 
-    public decimal CalculateDemandCoefficient(int eventId)
-    {
-        var soldSeats = _seatRepo.GetSoldSeatsCount(eventId);
-        var totalSeats = _seatRepo.GetTotalSeatsCount(eventId);
-        
-        if (totalSeats == 0) return 1.0m;
-        
-        var soldRatio = (decimal)soldSeats / totalSeats;
-        
-        if (soldRatio >= 0.9m) return 2.0m;
-        if (soldRatio >= 0.7m) return 1.5m;
-        if (soldRatio >= 0.5m) return 1.2m;
-        return 1.0m;
-    }
+        public decimal CalculatePrice(int seatId)
+        {
+            var seat = _seatRepository.GetById(seatId);
+            if (seat == null)
+                throw new InvalidOperationException("Место не найдено");
 
-    public decimal CalculateRefundCommission(int ticketId)
-    {
-        var ticketRepo = new TicketRepository(new DatabaseService(""));
-        var eventRepo = new EventRepository(new DatabaseService(""));
-        
-        var ticket = ticketRepo.GetById(ticketId);
-        var evt = eventRepo.GetById(ticket.EventId);
-        
-        var hoursUntilEvent = (evt.Date - DateTime.Now).TotalHours;
-        
-        if (hoursUntilEvent > 72) return ticket.Price * 0.05m;
-        if (hoursUntilEvent > 24) return ticket.Price * 0.15m;
-        if (hoursUntilEvent > 2) return ticket.Price * 0.30m;
-        return ticket.Price * 0.50m;
+            var category = _categoryRepository.GetById(seat.CategoryId);
+            if (category == null)
+                throw new InvalidOperationException($"Категория с id {seat.CategoryId} не найдена");
+
+            var coefficient = CalculateDemandCoefficient(seat.EventId);
+            return Math.Round(category.BasePrice * category.Multiplier * coefficient, 2);
+        }
+
+        public decimal CalculateDemandCoefficient(int eventId)
+        {
+            var soldSeats = _seatRepository.GetSoldSeatsCount(eventId);
+            var totalSeats = _seatRepository.GetTotalAvailableSeats(eventId);
+
+            if (totalSeats == 0)
+                return 1.0m;
+
+            var soldRatio = (decimal)soldSeats / totalSeats;
+
+            if (soldRatio >= 0.9m) return 2.0m;
+            if (soldRatio >= 0.7m) return 1.5m;
+            if (soldRatio >= 0.5m) return 1.2m;
+            return 1.0m;
+        }
+
+        public decimal CalculateRefundCommission(int ticketId, decimal price, DateTime eventDate)
+        {
+            var hoursUntilEvent = (eventDate - DateTime.UtcNow).TotalHours;
+
+            if (hoursUntilEvent > 72) return Math.Round(price * 0.05m, 2);
+            if (hoursUntilEvent > 24) return Math.Round(price * 0.15m, 2);
+            if (hoursUntilEvent > 2) return Math.Round(price * 0.30m, 2);
+            return Math.Round(price * 0.50m, 2);
+        }
     }
 }

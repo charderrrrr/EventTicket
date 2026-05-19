@@ -24,12 +24,14 @@ namespace EventTicket.Data.Repositories
         public Category? GetById(int id)
         {
             return _connection.QuerySingleOrDefault<Category>(
-                "SELECT * FROM categories WHERE id = @Id", new { Id = id });
+                "SELECT id, name, base_price AS BasePrice, multiplier AS Multiplier FROM categories WHERE id = @Id", 
+                new { Id = id });
         }
 
         public IEnumerable<Category> GetAll()
         {
-            return _connection.Query<Category>("SELECT * FROM categories ORDER BY base_price DESC");
+            return _connection.Query<Category>(
+                "SELECT id, name, base_price AS BasePrice, multiplier AS Multiplier FROM categories ORDER BY base_price DESC");
         }
 
         public void Update(Category category)

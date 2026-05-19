@@ -25,20 +25,27 @@ namespace EventTicket.Data.Repositories
         public Ticket? GetById(int id)
         {
             return _connection.QuerySingleOrDefault<Ticket>(
-                "SELECT * FROM tickets WHERE id = @Id", new { Id = id });
+                @"SELECT id, user_id AS UserId, event_id AS EventId, seat_id AS SeatId, 
+                         purchase_date AS PurchaseDate, price AS Price, status AS Status 
+                  FROM tickets WHERE id = @Id", 
+                new { Id = id });
         }
 
         public IEnumerable<Ticket> GetByUserId(int userId)
         {
             return _connection.Query<Ticket>(
-                "SELECT * FROM tickets WHERE user_id = @UserId ORDER BY purchase_date DESC", 
+                @"SELECT id, user_id AS UserId, event_id AS EventId, seat_id AS SeatId, 
+                         purchase_date AS PurchaseDate, price AS Price, status AS Status 
+                  FROM tickets WHERE user_id = @UserId ORDER BY purchase_date DESC", 
                 new { UserId = userId });
         }
 
         public Ticket? GetBySeatId(int seatId)
         {
             return _connection.QuerySingleOrDefault<Ticket>(
-                "SELECT * FROM tickets WHERE seat_id = @SeatId AND status = @Status", 
+                @"SELECT id, user_id AS UserId, event_id AS EventId, seat_id AS SeatId, 
+                         purchase_date AS PurchaseDate, price AS Price, status AS Status 
+                  FROM tickets WHERE seat_id = @SeatId AND status = @Status", 
                 new { SeatId = seatId, Status = (int)TicketStatus.Active });
         }
 
@@ -52,7 +59,9 @@ namespace EventTicket.Data.Repositories
         public IEnumerable<Ticket> GetActiveByEventId(int eventId)
         {
             return _connection.Query<Ticket>(
-                "SELECT * FROM tickets WHERE event_id = @EventId AND status = @Status", 
+                @"SELECT id, user_id AS UserId, event_id AS EventId, seat_id AS SeatId, 
+                         purchase_date AS PurchaseDate, price AS Price, status AS Status 
+                  FROM tickets WHERE event_id = @EventId AND status = @Status", 
                 new { EventId = eventId, Status = (int)TicketStatus.Active });
         }
     }

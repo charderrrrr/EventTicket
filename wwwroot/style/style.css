@@ -1,0 +1,474 @@
+@import url('https://fonts.googleapis.com/css2?family=SN+Pro:ital,wght@0,200..900;1,200..900&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #0a0c12;
+    font-family: SN Pro;
+    padding: 2rem 1.5rem;
+    color: #eef2ff;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    background-color: transparent;
+}
+
+/* левая секция: схема зала */
+.venue-section {
+    flex: 2;
+    min-width: 280px;
+    background-color: #0f111a;
+    border-radius: 1.5rem;
+    padding: 1.8rem;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+    border: 1px solid #1e243b;
+}
+
+.venue-title {
+    font-size: 1.8rem;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+    margin-bottom: 1rem;
+    color: #cfdfff;
+    border-left: 4px solid #6c63ff;
+    padding-left: 1rem;
+}
+
+.stage {
+    background-color: #191e2f;
+    text-align: center;
+    padding: 0.9rem;
+    font-weight: 700;
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+    color: #b7c4f0;
+    border-radius: 0.75rem;
+    margin: 1.2rem 0 2rem 0;
+    border: 1px solid #2a2f47;
+}
+
+/* сетка мест */
+.seat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(52px, 70px));
+    justify-content: center;
+    gap: 0.7rem 0.9rem;
+    margin-bottom: 2rem;
+    background-color: #0b0d14;
+    padding: 1.5rem;
+    border-radius: 1.25rem;
+    border: 1px solid #1f253e;
+}
+
+.seat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #1b1f2e;
+    border-radius: 0.6rem;
+    padding: 0.5rem 0.2rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border: 1px solid #2c314b;
+    color: #cdd9ff;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.seat:hover {
+    background-color: #282f46;
+    border-color: #5f6bc9;
+    transform: scale(1.02);
+}
+
+.seat.selected {
+    background-color: #3d3b6b;
+    border: 2px solid #9b8eff;
+    color: white;
+    box-shadow: 0 0 0 1px #5d56b3;
+}
+
+/* статусы мест */
+.seat.sold {
+    background-color: #2a1e3c;
+    border-color: #5a3e7a;
+    color: #a191c2;
+    cursor: not-allowed;
+    opacity: 0.7;
+    text-decoration: line-through;
+    filter: grayscale(0.1);
+}
+
+.seat.blocked {
+    background-color: #1a1625;
+    border-color: #3c2e54;
+    color: #6f5a8c;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.seat.vip {
+    background-color: #2c2348;
+    border-left: 3px solid #b87cff;
+    border-right: 3px solid #b87cff;
+}
+
+/* легенда */
+.legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.2rem;
+    margin: 1.5rem 0 1rem 0;
+    padding-top: 0.5rem;
+    border-top: 1px solid #21263f;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    color: #b9c3e6;
+}
+
+.legend-color {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+}
+
+.legend-parter {
+    background-color: #1b1f2e;
+    border: 1px solid #2c314b;
+}
+
+.legend-balcony {
+    background-color: #1e253c;
+    border: 1px solid #373e60;
+}
+
+.legend-vip {
+    background-color: #2c2348;
+    border-left: 3px solid #b87cff;
+    width: 22px;
+}
+
+.legend-blocked {
+    background-color: #1a1625;
+    border: 1px solid #3c2e54;
+}
+
+.legend-sold {
+    background-color: #2a1e3c;
+    border: 1px solid #5a3e7a;
+}
+
+.demand-info {
+    background-color: #0c0f18;
+    padding: 0.8rem 1rem;
+    border-radius: 1rem;
+    margin: 1rem 0 1rem 0;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border: 1px solid #232842;
+    color: #ccd6ff;
+}
+
+.refund-info {
+    background-color: #0b0e17;
+    border-radius: 1rem;
+    border: 1px solid #252b48;
+    margin-top: 0.8rem;
+    overflow: hidden;
+}
+
+.refund-header {
+    background-color: #131725;
+    padding: 0.7rem 1rem;
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+    color: #b9c4ff;
+    border-bottom: 1px solid #252b48;
+    text-transform: uppercase;
+}
+
+.refund-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.75rem;
+}
+
+.refund-table td {
+    padding: 0.6rem 1rem;
+    border-bottom: 1px solid #191e30;
+    color: #a8b3e0;
+}
+
+.refund-table tr:last-child td {
+    border-bottom: none;
+}
+
+.refund-table td:first-child {
+    font-weight: 500;
+    color: #cbd5ff;
+}
+
+.refund-table td:last-child {
+    text-align: right;
+    font-family: monospace;
+    font-weight: 600;
+    color: #e2adff;
+}
+
+.percentage-badge {
+    background-color: #1e1b38;
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #c9b3ff;
+    letter-spacing: 0.3px;
+}
+
+.loader-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(10, 12, 18, 0.92);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: none;
+}
+
+.spinner {
+    width: 48px;
+    height: 48px;
+    border: 3px solid #2d3258;
+    border-top: 3px solid #8b7eff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loader-text {
+    margin-top: 1rem;
+    color: #b9c2ed;
+    font-size: 0.85rem;
+    text-align: center;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+.hidden-loader {
+    display: none;
+}
+
+.info-section {
+    flex: 1.2;
+    min-width: 260px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.info-panel {
+    background-color: #0f111a;
+    border-radius: 1.5rem;
+    padding: 1.5rem;
+    border: 1px solid #1e243b;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.4);
+}
+
+.info-placeholder {
+    color: #6b729b;
+    text-align: center;
+    padding: 2rem 0;
+    font-size: 0.9rem;
+    letter-spacing: 0.3px;
+}
+
+.seat-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.seat-detail-row {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid #20253e;
+    padding-bottom: 0.6rem;
+    font-size: 0.95rem;
+}
+
+.seat-detail-label {
+    color: #8e99cc;
+    font-weight: 500;
+}
+
+.seat-detail-value {
+    color: #f0f3ff;
+    font-weight: 600;
+}
+
+.price-value {
+    color: #d2baff;
+    font-size: 1.2rem;
+}
+
+.actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+button {
+    flex: 1;
+    background-color: #1f2542;
+    border: none;
+    padding: 0.85rem 1rem;
+    border-radius: 2rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.15s linear;
+    color: #e6ecff;
+    letter-spacing: 0.3px;
+    border: 1px solid #343b61;
+}
+
+button:hover {
+    background-color: #2d3561;
+    border-color: #6f7bcb;
+    color: white;
+}
+
+button:active {
+    transform: scale(0.97);
+}
+
+#buyBtn {
+    background-color: #2c2760;
+    border-color: #5f5bb5;
+}
+
+#buyBtn:hover {
+    background-color: #403b82;
+}
+
+#refundBtn {
+    background-color: #2a1e3f;
+    border-color: #6d4896;
+}
+
+#refundBtn:hover {
+    background-color: #412e62;
+}
+
+.result {
+    background-color: #0c0f1a;
+    border-radius: 1rem;
+    padding: 0.9rem 1.2rem;
+    font-size: 0.85rem;
+    color: #bed1ff;
+    word-break: break-word;
+}
+
+.result.error {
+    color: #ffadad;
+    background-color: #1e1828;
+}
+
+.result.success {
+    color: #b9f5d8;
+}
+
+@media (max-width: 780px) {
+    body {
+        padding: 1rem;
+    }
+    .container {
+        gap: 1.2rem;
+    }
+    .seat-grid {
+        grid-template-columns: repeat(auto-fill, minmax(48px, 60px));
+        gap: 0.5rem;
+    }
+    .venue-section {
+        padding: 1rem;
+    }
+    .legend {
+        gap: 0.8rem;
+    }
+    .refund-table td {
+        padding: 0.5rem 0.8rem;
+    }
+}
+
+::-webkit-scrollbar {
+    width: 6px;
+    background: #11141f;
+}
+::-webkit-scrollbar-thumb {
+    background: #2f385b;
+    border-radius: 6px;
+}
+
+.seat span:first-child {
+    font-weight: 600;
+    font-size: 0.7rem;
+}
+
+.seat span:last-child {
+    font-size: 0.65rem;
+    opacity: 0.8;
+}
+
+.seat.sold::before, .seat.blocked::before {
+    content: none;
+}
+
+button, .seat, .stage, .legend-color, .info-panel, .demand-info, .refund-info, .loader-overlay {
+    background-image: none !important;
+    backdrop-filter: none !important;
+}
+.seat.vip {
+    font-weight: 500;
+    letter-spacing: 0.3px;
+}
+
+.loading-inline {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255,255,255,0.2);
+    border-top-color: #b59eff;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    margin-left: 8px;
+    vertical-align: middle;
+}

@@ -1,43 +1,50 @@
-public class BookingService
+using System;
+using System.Data;
+using EventTicket.Data.Repositories;
+using EventTicket.Models;
+using EventTicket.Models.Enums;
+
+namespace EventTicket.Services
 {
-    private readonly SeatRepository _seatRepo;
-    private readonly TicketRepository _ticketRepo;
-    private readonly PricingService _pricingService;
-
-    public BookingService(SeatRepository seatRepo, TicketRepository ticketRepo, PricingService pricingService)
+    public class BookingService
     {
-        _seatRepo = seatRepo;
-        _ticketRepo = ticketRepo;
-        _pricingService = pricingService;
-    }
+        private readonly IDbConnection _connection;
+        private readonly SeatRepository _seatRepository;
+        private readonly TicketRepository _ticketRepository;
+        private readonly PricingService _pricingService;
 
-    public Ticket PurchaseTicket(int userId, int seatId)
-    {
-        var seat = _seatRepo.GetById(seatId);
-        
-        if (seat.Status != "available")
-            throw new InvalidOperationException("Seat is not available");
-        
-        var price = _pricingService.CalculatePrice(seatId);
-        
-        _seatRepo.UpdateStatus(seatId, "sold");
-        
-        var ticket = new Ticket
+        public BookingService(IDbConnection connection)
         {
-            UserId = userId,
-            EventId = seat.EventId,
-            SeatId = seatId,
-            PurchaseDate = DateTime.Now,
-            Price = price,
-            Status = "active"
-        };
-        
-        return _ticketRepo.Create(ticket);
-    }
+            _connection = connection;
+            _seatRepository = new SeatRepository(connection);
+            _ticketRepository = new TicketRepository(connection);
+            _pricingService = new PricingService(connection);
+        }
 
-    public bool IsSeatAvailable(int seatId)
-    {
-        var seat = _seatRepo.GetById(seatId);
-        return seat.Status == "available";
+        public Ticket PurchaseTicket(int userId, int eventId, int seatId)
+        {
+            var seat = _seatRepository.GetById(seatId);
+            if (seat == null)
+                throw new InvalidOperationException("Место не найдено");
+
+            if (seat.EventId != eventId)
+                throw new InvalidOperationException("Место не принадлежит этому событию");
+
+            if (seat.Status != SeatStatus.Available)
+                throw new InvalidOperationException("Место недоступно для покупки");
+
+            var price = _pricingService.CalculatePrice(seatId);
+            
+            _seatRepository.UpdateStatus(seatId, SeatStatus.Sold);
+
+            var ticket = Ticket.Create(userId, eventId, seatId, price);
+            return _ticketRepository.Create(ticket);
+        }
+
+        public bool IsSeatAvailable(int seatId)
+        {
+            var seat = _seatRepository.GetById(seatId);
+            return seat != null && seat.Status == SeatStatus.Available;
+        }
     }
 }
