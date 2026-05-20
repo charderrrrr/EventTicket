@@ -44,12 +44,23 @@ async function purchaseTicket(eventId, seatId) {
 }
 
 async function refundTicket(ticketId) {
-    const response = await fetch(`${API_URL}/tickets/${ticketId}/refund`, { method: 'POST' });
+    const response = await fetch(`${API_URL}/tickets/${ticketId}/refund`, { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    });
     if (!response.ok) {
-        const error = await response.json();
+        const errorText = await response.text();
+        let error;
+        try {
+            error = JSON.parse(errorText);
+        } catch {
+            error = { error: errorText || 'Не удалось вернуть билет' };
+        }
         throw new Error(error.error || 'Не удалось вернуть билет');
     }
-    return await response.json();
+    const text = await response.text();
+    if (!text) throw new Error('Пустой ответ от сервера');
+    return JSON.parse(text);
 }
 
 async function getUserTickets() {

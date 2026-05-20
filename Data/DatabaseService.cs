@@ -89,7 +89,7 @@ namespace EventTicket.Data
             var venueCount = connection.QuerySingle<int>("SELECT COUNT(*) FROM venues");
             if (venueCount == 0)
             {
-                var venue = Venue.Create("Grand Hall", 10, 15, new BlockedSeat[]
+                var venue = Venue.Create("Grand Hall", 5, 7, new BlockedSeat[]
                 {
                     new BlockedSeat { Row = 5, Number = 7 },
                     new BlockedSeat { Row = 5, Number = 8 },
@@ -111,7 +111,7 @@ namespace EventTicket.Data
                 connection.Execute(@"
                     INSERT INTO events (name, date, venue_id, status) 
                     VALUES (@Name, @Date, @VenueId, @Status)",
-                    new { Name = "Rock Concert 2026", Date = eventDate, VenueId = venueId, Status = "active" });
+                    new { Name = "Бешеный концерт 2026", Date = eventDate, VenueId = venueId, Status = "active" });
 
                 var eventId = connection.QuerySingle<int>("SELECT id FROM events LIMIT 1");
                 var categories = connection.Query<(int Id, string Name, decimal BasePrice, decimal Multiplier)>(
@@ -125,19 +125,17 @@ namespace EventTicket.Data
                 var blockedSeats = new[] 
                 { 
                     new { Row = 5, Number = 7 }, 
-                    new { Row = 5, Number = 8 }, 
-                    new { Row = 6, Number = 7 }, 
-                    new { Row = 6, Number = 8 } 
+                    new { Row = 4, Number = 2 }
                 };
 
-                for (int row = 1; row <= 10; row++)
+                for (int row = 1; row <= 5; row++)
                 {
-                    for (int number = 1; number <= 15; number++)
+                    for (int number = 1; number <= 7; number++)
                     {
                         var isBlocked = blockedSeats.Any(b => b.Row == row && b.Number == number);
                         
                         int categoryId;
-                        if (row <= 3)
+                        if (row <= 2)
                             categoryId = vipId;
                         else if (row <= 7)
                             categoryId = parterId;

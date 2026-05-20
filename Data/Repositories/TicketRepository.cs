@@ -56,6 +56,11 @@ namespace EventTicket.Data.Repositories
                 new { Id = id, Status = (int)status });
         }
 
+        public void Delete(int id)
+        {
+            _connection.Execute("DELETE FROM tickets WHERE id = @Id", new { Id = id });
+        }
+
         public IEnumerable<Ticket> GetActiveByEventId(int eventId)
         {
             return _connection.Query<Ticket>(

@@ -38,7 +38,7 @@ namespace EventTicket.Services
             var commission = _pricingService.CalculateRefundCommission(ticketId, ticket.Price, evt.Date);
             var refundAmount = ticket.Price - commission;
 
-            _ticketRepository.UpdateStatus(ticketId, TicketStatus.Refunded);
+            _ticketRepository.Delete(ticketId);
             _seatRepository.UpdateStatus(ticket.SeatId, SeatStatus.Available);
 
             return new RefundResult

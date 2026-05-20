@@ -2,6 +2,7 @@ let currentEvent = null;
 let seats = [];
 let selectedSeat = null;
 let categories = [];
+let isProcessing = false;
 
 async function loadEventData() {
     try {
@@ -131,7 +132,8 @@ async function showSeatInfo(seat) {
 
         let refundInfo = '';
         if (statusText === 'Sold') {
-            const ticket = await getSeatTicket(seat.id);
+            const tickets = await getUserTickets();
+            const ticket = tickets.find(t => t.seatId === seat.id && t.status === 0) || null;
             if (ticket) {
                 const commissionInfo = await calculateRefundCommission(ticket.id);
                 refundInfo = `
@@ -178,19 +180,12 @@ async function showSeatInfo(seat) {
     }
 }
 
-async function getSeatTicket(seatId) {
-    try {
-        const tickets = await getUserTickets();
-        return tickets.find(t => t.seatId === seatId && t.status === 0) || null;
-    } catch {
-        return null;
-    }
-}
-
-async function buyTicket() {
+async function handleBuyTicket() {
+    if (isProcessing) return;
     if (!selectedSeat || getStatusText(selectedSeat.status) !== 'Available') return;
 
     try {
+        isProcessing = true;
         showLoader();
         const ticket = await purchaseTicket(currentEvent.id, selectedSeat.id);
 
@@ -200,7 +195,7 @@ async function buyTicket() {
         selectedSeat = seats.find(s => s.id === selectedSeat.id);
 
         renderSeats();
-        if (selectedSeat) showSeatInfo(selectedSeat);
+        if (selectedSeat) await showSeatInfo(selectedSeat);
 
         document.getElementById('result').className = 'result success';
         document.getElementById('result').innerHTML = `Билет куплен! Ряд ${selectedSeat.row}, Место ${selectedSeat.number}, Цена: ${ticket.price} руб.`;
@@ -209,16 +204,31 @@ async function buyTicket() {
         document.getElementById('result').className = 'result error';
         document.getElementById('result').innerHTML = error.message;
         hideLoader();
+    } finally {
+        isProcessing = false;
     }
 }
 
-async function refundTicket() {
+async function handleRefundTicket() {
+    if (isProcessing) return;
     if (!selectedSeat || getStatusText(selectedSeat.status) !== 'Sold') return;
 
     try {
+        isProcessing = true;
         showLoader();
-        const ticket = await getSeatTicket(selectedSeat.id);
-        if (!ticket) throw new Error('Билет не найден');
+        
+        const tickets = await getUserTickets();
+        const ticket = tickets.find(t => t.seatId === selectedSeat.id && t.status === 0) || null;
+        
+        if (!ticket) {
+            const data = await getVenueLayout(currentEvent.id);
+            seats = data.seats;
+            updateDemandInfo(data.demand);
+            selectedSeat = seats.find(s => s.id === selectedSeat.id);
+            renderSeats();
+            if (selectedSeat) await showSeatInfo(selectedSeat);
+            throw new Error('Билет не найден. Возможно, место уже освобождено.');
+        }
 
         const refund = await refundTicket(ticket.id);
 
@@ -228,20 +238,23 @@ async function refundTicket() {
         selectedSeat = seats.find(s => s.id === selectedSeat.id);
 
         renderSeats();
-        if (selectedSeat) showSeatInfo(selectedSeat);
+        if (selectedSeat) await showSeatInfo(selectedSeat);
 
         document.getElementById('result').className = 'result success';
         document.getElementById('result').innerHTML = `Возврат оформлен! Сумма: ${refund.refundAmount} руб. (удержана комиссия ${refund.commission} руб.)`;
         hideLoader();
     } catch (error) {
+        console.error('Refund error:', error);
         document.getElementById('result').className = 'result error';
         document.getElementById('result').innerHTML = error.message;
         hideLoader();
+    } finally {
+        isProcessing = false;
     }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     loadEventData();
-    document.getElementById('buyBtn').addEventListener('click', buyTicket);
-    document.getElementById('refundBtn').addEventListener('click', refundTicket);
+    document.getElementById('buyBtn').addEventListener('click', handleBuyTicket);
+    document.getElementById('refundBtn').addEventListener('click', handleRefundTicket);
 });

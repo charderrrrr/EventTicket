@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using EventTicket.Data.Repositories;
-using EventTicket.Data;
 
 namespace EventTicket.Controllers
 {
@@ -8,20 +7,19 @@ namespace EventTicket.Controllers
     [Route("api/categories")]
     public class CategoryController : ControllerBase
     {
-        private readonly DatabaseService _databaseService;
+        private readonly EventTicketModule _module;
 
-        public CategoryController(DatabaseService databaseService)
+        public CategoryController(EventTicketModule module)
         {
-            _databaseService = databaseService;
+            _module = module;
         }
 
         [HttpGet]
         public IActionResult GetCategories()
         {
-            using var connection = _databaseService.CreateConnection();
+            using var connection = _module.CreateConnection();
             var repo = new CategoryRepository(connection);
-            var categories = repo.GetAll();
-            return Ok(categories);
+            return Ok(repo.GetAll());
         }
     }
 }

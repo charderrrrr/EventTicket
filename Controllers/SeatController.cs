@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using EventTicket.Data.Repositories;
+using EventTicket.Services;
 
 namespace EventTicket.Controllers
 {
@@ -16,10 +18,15 @@ namespace EventTicket.Controllers
         [HttpGet]
         public IActionResult GetEventSeats(int eventId)
         {
-            var seats = _module.VenueLayoutService.GetEventSeats(eventId);
-            var coefficient = _module.PricingService.CalculateDemandCoefficient(eventId);
-            var soldSeats = _module.SeatRepository.GetSoldSeatsCount(eventId);
-            var totalSeats = _module.SeatRepository.GetTotalAvailableSeats(eventId);
+            using var connection = _module.CreateConnection();
+            var layoutService = new VenueLayoutService(connection);
+            var pricingService = new PricingService(connection);
+            var seatRepo = new SeatRepository(connection);
+
+            var seats = layoutService.GetEventSeats(eventId);
+            var coefficient = pricingService.CalculateDemandCoefficient(eventId);
+            var soldSeats = seatRepo.GetSoldSeatsCount(eventId);
+            var totalSeats = seatRepo.GetTotalAvailableSeats(eventId);
 
             return Ok(new
             {
@@ -36,23 +43,20 @@ namespace EventTicket.Controllers
         [HttpGet("{seatId}")]
         public IActionResult GetSeatInfo(int eventId, int seatId)
         {
-            var seat = _module.VenueLayoutService.GetSeatInfo(seatId);
+            using var connection = _module.CreateConnection();
+            var layoutService = new VenueLayoutService(connection);
+            var seat = layoutService.GetSeatInfo(seatId);
             if (seat.EventId != eventId)
                 return NotFound(new { error = "Место не принадлежит этому событию" });
             return Ok(seat);
         }
 
-        [HttpGet("{seatId}/availability")]
-        public IActionResult CheckAvailability(int eventId, int seatId)
-        {
-            var isAvailable = _module.BookingService.IsSeatAvailable(seatId);
-            return Ok(new { available = isAvailable });
-        }
-
         [HttpGet("{seatId}/price")]
         public IActionResult GetSeatPrice(int eventId, int seatId)
         {
-            var price = _module.PricingService.CalculatePrice(seatId);
+            using var connection = _module.CreateConnection();
+            var pricingService = new PricingService(connection);
+            var price = pricingService.CalculatePrice(seatId);
             return Ok(new { price = price });
         }
     }

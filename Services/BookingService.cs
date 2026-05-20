@@ -33,6 +33,10 @@ namespace EventTicket.Services
             if (seat.Status != SeatStatus.Available)
                 throw new InvalidOperationException("Место недоступно для покупки");
 
+            var existingTicket = _ticketRepository.GetBySeatId(seatId);
+            if (existingTicket != null)
+                throw new InvalidOperationException("На это место уже продан билет");
+
             var price = _pricingService.CalculatePrice(seatId);
             
             _seatRepository.UpdateStatus(seatId, SeatStatus.Sold);
@@ -44,7 +48,11 @@ namespace EventTicket.Services
         public bool IsSeatAvailable(int seatId)
         {
             var seat = _seatRepository.GetById(seatId);
-            return seat != null && seat.Status == SeatStatus.Available;
+            if (seat == null || seat.Status != SeatStatus.Available)
+                return false;
+            
+            var existingTicket = _ticketRepository.GetBySeatId(seatId);
+            return existingTicket == null;
         }
     }
 }

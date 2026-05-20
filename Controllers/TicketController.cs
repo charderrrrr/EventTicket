@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using EventTicket.Data.Repositories;
+using EventTicket.Services;
 
 namespace EventTicket.Controllers
 {
@@ -18,7 +20,9 @@ namespace EventTicket.Controllers
         {
             try
             {
-                var ticket = _module.BookingService.PurchaseTicket(request.UserId, request.EventId, request.SeatId);
+                using var connection = _module.CreateConnection();
+                var bookingService = new BookingService(connection);
+                var ticket = bookingService.PurchaseTicket(request.UserId, request.EventId, request.SeatId);
                 return Ok(ticket);
             }
             catch (InvalidOperationException ex)
@@ -32,7 +36,9 @@ namespace EventTicket.Controllers
         {
             try
             {
-                var result = _module.RefundService.RefundTicket(ticketId);
+                using var connection = _module.CreateConnection();
+                var refundService = new RefundService(connection);
+                var result = refundService.RefundTicket(ticketId);
                 return Ok(result);
             }
             catch (InvalidOperationException ex)
@@ -44,15 +50,20 @@ namespace EventTicket.Controllers
         [HttpGet("{ticketId}/refund-commission")]
         public IActionResult GetRefundCommission(int ticketId)
         {
-            var ticket = _module.TicketRepository.GetById(ticketId);
+            using var connection = _module.CreateConnection();
+            var ticketRepo = new TicketRepository(connection);
+            var eventRepo = new EventRepository(connection);
+            var pricingService = new PricingService(connection);
+
+            var ticket = ticketRepo.GetById(ticketId);
             if (ticket == null)
                 return NotFound(new { error = "Билет не найден" });
 
-            var evt = _module.EventRepository.GetById(ticket.EventId);
+            var evt = eventRepo.GetById(ticket.EventId);
             if (evt == null)
                 return NotFound(new { error = "Событие не найдено" });
 
-            var commission = _module.PricingService.CalculateRefundCommission(ticketId, ticket.Price, evt.Date);
+            var commission = pricingService.CalculateRefundCommission(ticketId, ticket.Price, evt.Date);
             return Ok(new
             {
                 commission = commission,
@@ -63,7 +74,9 @@ namespace EventTicket.Controllers
         [HttpGet]
         public IActionResult GetUserTickets([FromQuery] int userId = 1)
         {
-            var tickets = _module.TicketRepository.GetByUserId(userId);
+            using var connection = _module.CreateConnection();
+            var ticketRepo = new TicketRepository(connection);
+            var tickets = ticketRepo.GetByUserId(userId);
             return Ok(tickets);
         }
     }
