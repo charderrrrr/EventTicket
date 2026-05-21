@@ -14,8 +14,46 @@
         </div>
     </div>
 
+    <div id="paymentModal" class="modal-overlay hidden-loader">
+        <div class="modal">
+            <div class="modal-title">Оформление билета</div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Имя</label>
+                    <input type="text" id="firstName" placeholder="Введите имя">
+                </div>
+                <div class="form-group">
+                    <label>Фамилия</label>
+                    <input type="text" id="lastName" placeholder="Введите фамилию">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="email" placeholder="Введите email">
+                </div>
+                <div class="form-group">
+                    <label>Способ оплаты</label>
+                    <select id="paymentMethod">
+                        <option value="card">Банковская карта</option>
+                        <option value="sbp">СБП</option>
+                        <option value="crypto">Криптовалюта</option>
+                    </select>
+                </div>
+                <div class="modal-seat-info" id="modalSeatInfo"></div>
+            </div>
+            <div class="modal-actions">
+                <button id="cancelPaymentBtn">Отмена</button>
+                <button id="confirmPaymentBtn">Оплатить</button>
+            </div>
+        </div>
+    </div>
+
     <div class="container">
         <div class="venue-section">
+            <div class="event-selector">
+                <select id="eventSelect">
+                    <option value="">Загрузка событий...</option>
+                </select>
+            </div>
             <div class="venue-title" id="venueTitle">Загрузка...</div>
             <div class="stage">СЦЕНА</div>
             <div class="seat-grid" id="seatGrid"></div>
@@ -74,6 +112,7 @@
                 <div class="info-placeholder">Выберите место на схеме</div>
             </div>
             <div class="actions" id="actions" style="display: none;">
+                <button id="reserveBtn">Забронировать</button>
                 <button id="buyBtn">Купить билет</button>
                 <button id="refundBtn">Вернуть билет</button>
             </div>

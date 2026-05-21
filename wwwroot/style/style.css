@@ -284,7 +284,7 @@ body {
 }
 
 .hidden-loader {
-    display: none;
+    display: none !important;
 }
 
 .info-section {
@@ -471,4 +471,181 @@ button, .seat, .stage, .legend-color, .info-panel, .demand-info, .refund-info, .
     animation: spin 0.6s linear infinite;
     margin-left: 8px;
     vertical-align: middle;
+}
+
+.event-selector {
+    margin-bottom: 1rem;
+}
+
+.event-selector select {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    background-color: #1b1f2e;
+    color: #cfdfff;
+    border: 1px solid #2c314b;
+    border-radius: 0.75rem;
+    font-size: 0.95rem;
+    font-family: SN Pro, sans-serif;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238e99cc' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+}
+
+.event-selector select:hover {
+    border-color: #5f6bc9;
+}
+
+.event-selector select:focus {
+    outline: none;
+    border-color: #6c63ff;
+    box-shadow: 0 0 0 2px rgba(108, 99, 255, 0.2);
+}
+
+.event-selector select option {
+    background-color: #0f111a;
+    color: #cfdfff;
+    padding: 0.5rem;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(10, 12, 18, 0.92);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal {
+    background-color: #0f111a;
+    border-radius: 1.5rem;
+    padding: 2rem;
+    border: 1px solid #1e243b;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+    width: 420px;
+    max-width: 90vw;
+}
+
+.modal-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #cfdfff;
+    margin-bottom: 1.5rem;
+    border-left: 4px solid #6c63ff;
+    padding-left: 1rem;
+}
+
+.modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.form-group label {
+    color: #8e99cc;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.form-group input,
+.form-group select {
+    padding: 0.75rem 1rem;
+    background-color: #1b1f2e;
+    color: #cfdfff;
+    border: 1px solid #2c314b;
+    border-radius: 0.75rem;
+    font-size: 0.9rem;
+    font-family: SN Pro, sans-serif;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #6c63ff;
+    box-shadow: 0 0 0 2px rgba(108, 99, 255, 0.2);
+}
+
+.form-group input::placeholder {
+    color: #5a6080;
+}
+
+.form-group select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238e99cc' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+}
+
+.form-group select option {
+    background-color: #0f111a;
+    color: #cfdfff;
+}
+
+.modal-seat-info {
+    background-color: #0c0f18;
+    border-radius: 0.75rem;
+    padding: 0.8rem 1rem;
+    font-size: 0.85rem;
+    color: #b9c3e6;
+    border: 1px solid #232842;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.modal-actions button {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border-radius: 2rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    border: 1px solid #343b61;
+}
+
+#cancelPaymentBtn {
+    background-color: #1f2542;
+    color: #e6ecff;
+}
+
+#cancelPaymentBtn:hover {
+    background-color: #2d3561;
+}
+
+#confirmPaymentBtn {
+    background-color: #2c2760;
+    border-color: #5f5bb5;
+    color: #fff;
+}
+
+#confirmPaymentBtn:hover {
+    background-color: #403b82;
+}
+
+.seat.reserved {
+    background-color: #2a3a1e;
+    border: 2px dashed #7ab84e;
+    color: #c5e6b5;
+    cursor: pointer;
+}
+
+.seat.reserved:hover {
+    background-color: #3a4f2a;
+    border-color: #9de86a;
 }

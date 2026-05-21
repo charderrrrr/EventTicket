@@ -89,31 +89,33 @@ namespace EventTicket.Data
             var venueCount = connection.QuerySingle<int>("SELECT COUNT(*) FROM venues");
             if (venueCount == 0)
             {
-                var venue = Venue.Create("Grand Hall", 5, 7, new BlockedSeat[]
+                var concertVenue = Venue.Create("Concert Hall", 5, 7, new BlockedSeat[]
                 {
-                    new BlockedSeat { Row = 5, Number = 7 },
-                    new BlockedSeat { Row = 5, Number = 8 },
-                    new BlockedSeat { Row = 6, Number = 7 },
-                    new BlockedSeat { Row = 6, Number = 8 }
+                    new BlockedSeat { Row = 5, Number = 6 },
+                    new BlockedSeat { Row = 5, Number = 7 }
+                });
+
+                var cinemaVenue = Venue.Create("Cinema Hall", 6, 8, new BlockedSeat[]
+                {
+                    new BlockedSeat { Row = 1, Number = 4 },
+                    new BlockedSeat { Row = 1, Number = 5 }
                 });
 
                 connection.Execute(@"
                     INSERT INTO venues (name, rows, seats_per_row, blocked_seats) 
-                    VALUES (@Name, @Rows, @SeatsPerRow, @BlockedSeats)", venue);
+                    VALUES (@Name, @Rows, @SeatsPerRow, @BlockedSeats)", concertVenue);
+
+                connection.Execute(@"
+                    INSERT INTO venues (name, rows, seats_per_row, blocked_seats) 
+                    VALUES (@Name, @Rows, @SeatsPerRow, @BlockedSeats)", cinemaVenue);
             }
 
             var eventCount = connection.QuerySingle<int>("SELECT COUNT(*) FROM events");
             if (eventCount == 0)
             {
-                var venueId = connection.QuerySingle<int>("SELECT id FROM venues LIMIT 1");
-                var eventDate = DateTime.UtcNow.AddDays(14);
+                var venues = connection.Query<Venue>(
+                    "SELECT id, name AS Name, rows AS Rows, seats_per_row AS SeatsPerRow, blocked_seats AS BlockedSeats FROM venues").ToList();
                 
-                connection.Execute(@"
-                    INSERT INTO events (name, date, venue_id, status) 
-                    VALUES (@Name, @Date, @VenueId, @Status)",
-                    new { Name = "Бешеный концерт 2026", Date = eventDate, VenueId = venueId, Status = "active" });
-
-                var eventId = connection.QuerySingle<int>("SELECT id FROM events LIMIT 1");
                 var categories = connection.Query<(int Id, string Name, decimal BasePrice, decimal Multiplier)>(
                     "SELECT id, name, base_price, multiplier FROM categories").ToList();
                 
@@ -121,41 +123,70 @@ namespace EventTicket.Data
                 var parterId = categories.First(c => c.Name == "Parter").Id;
                 var balconyId = categories.First(c => c.Name == "Balcony").Id;
 
-                var seats = new List<dynamic>();
-                var blockedSeats = new[] 
-                { 
-                    new { Row = 5, Number = 7 }, 
-                    new { Row = 4, Number = 2 }
-                };
+                var concertVenue = venues.First(v => v.Name == "Concert Hall");
+                var cinemaVenue = venues.First(v => v.Name == "Cinema Hall");
 
-                for (int row = 1; row <= 5; row++)
+                var eventDate = DateTime.UtcNow.AddDays(14);
+                var eventDate2 = DateTime.UtcNow.AddDays(21);
+
+                connection.Execute(@"
+                    INSERT INTO events (name, date, venue_id, status) 
+                    VALUES 
+                    (@Name1, @Date1, @VenueId1, @Status),
+                    (@Name2, @Date2, @VenueId2, @Status)",
+                    new 
+                    { 
+                        Name1 = "БЕШЕНЫЙ КОНЦЕРТ 2026", Date1 = eventDate, VenueId1 = concertVenue.Id, 
+                        Name2 = "БЕШЕНЫЙ ФИЛЬМ 2026", Date2 = eventDate2, VenueId2 = cinemaVenue.Id,
+                        Status = "active" 
+                    });
+
+                var events = connection.Query<Event>(
+                    "SELECT id, name AS Name, date AS Date, venue_id AS VenueId, status AS Status FROM events").ToList();
+
+                foreach (var evt in events)
                 {
-                    for (int number = 1; number <= 7; number++)
+                    var venue = venues.First(v => v.Id == evt.VenueId);
+                    var blockedSeats = Venue.Create("", 0, 0).GetType() == typeof(Venue) 
+                        ? new BlockedSeat[0] 
+                        : new BlockedSeat[0];
+                    
+                    var venueObj = connection.QuerySingle<Venue>(
+                        "SELECT id, name AS Name, rows AS Rows, seats_per_row AS SeatsPerRow, blocked_seats AS BlockedSeats FROM venues WHERE id = @Id",
+                        new { Id = evt.VenueId });
+                    
+                    var blocked = venueObj.GetBlockedSeats();
+                    var seats = new List<dynamic>();
+
+                    for (int row = 1; row <= venueObj.Rows; row++)
                     {
-                        var isBlocked = blockedSeats.Any(b => b.Row == row && b.Number == number);
-                        
-                        int categoryId;
-                        if (row <= 2)
-                            categoryId = vipId;
-                        else if (row <= 7)
-                            categoryId = parterId;
-                        else
-                            categoryId = balconyId;
-
-                        seats.Add(new
+                        for (int number = 1; number <= venueObj.SeatsPerRow; number++)
                         {
-                            EventId = eventId,
-                            Row = row,
-                            Number = number,
-                            CategoryId = categoryId,
-                            Status = isBlocked ? (int)SeatStatus.Blocked : (int)SeatStatus.Available
-                        });
-                    }
-                }
+                            var isBlocked = blocked.Any(b => b.Row == row && b.Number == number);
+                            
+                            int categoryId;
+                            if (row <= 2)
+                                categoryId = vipId;
+                            else if (row <= 4)
+                                categoryId = parterId;
+                            else
+                                categoryId = balconyId;
 
-                var seatSql = @"INSERT INTO seats (event_id, row, number, category_id, status) 
-                                VALUES (@EventId, @Row, @Number, @CategoryId, @Status)";
-                connection.Execute(seatSql, seats);
+                            seats.Add(new
+                            {
+                                EventId = evt.Id,
+                                Row = row,
+                                Number = number,
+                                CategoryId = categoryId,
+                                Status = isBlocked ? (int)SeatStatus.Blocked : (int)SeatStatus.Available
+                            });
+                        }
+                    }
+
+                    var seatSql = @"INSERT INTO seats (event_id, row, number, category_id, status) 
+                                    VALUES (@EventId, @Row, @Number, @CategoryId, @Status)";
+                    connection.Execute(seatSql, seats);
+                }
             }
         }
     }
