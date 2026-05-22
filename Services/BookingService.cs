@@ -1,4 +1,3 @@
-using System;
 using System.Data;
 using EventTicket.Data.Repositories;
 using EventTicket.Models;

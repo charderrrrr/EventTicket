@@ -1,3 +1,7 @@
+// CategoryController - API контроллер ценовых категорий.
+// Обрабатывает запросы на получение списка всех категорий (Партер, Балкон, VIP)
+// с базовыми ценами и мультипликаторами для расчета стоимости билетов.
+
 using Microsoft.AspNetCore.Mvc;
 using EventTicket.Data.Repositories;
 

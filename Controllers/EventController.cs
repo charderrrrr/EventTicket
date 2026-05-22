@@ -1,3 +1,7 @@
+// EventController - API контроллер управления событиями.
+// Обрабатывает запросы на получение списка активных событий, информации о конкретном событии и создание новых событий.
+// При создании события автоматически генерирует схему мест через VenueLayoutService.
+
 using Microsoft.AspNetCore.Mvc;
 using EventTicket.Data.Repositories;
 using EventTicket.Models;

@@ -1,3 +1,9 @@
+// DatabaseService - сервис инициализации и подключения к базе данных.
+// Initialize - создает таблицы (venues, categories, events, seats, tickets) если их нет.
+// SeedData - заполняет базу тестовыми данными: две площадки, три категории, два события со схемами мест.
+// CreateConnection - создает новое подключение к PostgreSQL через Npgsql.
+// Строка подключения берется из appsettings.json или переменной окружения DB_CONNECTION.
+
 using System.Data;
 using Dapper;
 using Npgsql;

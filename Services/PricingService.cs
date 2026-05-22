@@ -1,8 +1,5 @@
-using System;
 using System.Data;
-using System.Linq;
 using EventTicket.Data.Repositories;
-using EventTicket.Models.Enums;
 
 namespace EventTicket.Services
 {

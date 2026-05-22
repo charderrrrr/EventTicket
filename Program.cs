@@ -3,7 +3,9 @@ using EventTicket.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var connectionString = "Host=localhost;Database=eventticket;Username=postgres;Password=pass123";
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? Environment.GetEnvironmentVariable("DB_CONNECTION")
+    ?? "Host=localhost;Database=eventticket;Username=postgres;Password=pass123"; //дефолт дефолтом
 
 var dbService = new DatabaseService(connectionString);
 dbService.Initialize();

@@ -1,3 +1,7 @@
+// VenueController - API контроллер управления залами.
+// Обрабатывает запросы на получение списка залов и информации о конкретном зале.
+// Возвращает схему рассадки с учетом заблокированных мест.
+
 using Microsoft.AspNetCore.Mvc;
 using EventTicket.Data.Repositories;
 
